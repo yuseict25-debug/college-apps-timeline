@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexTimeline | Engineering Candidate Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-mode">
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>ApexTimeline</h1>
+          <span>STEM Portfolio Tracker</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="layer-navigation">
+        <button class="nav-tab active" data-layer="1">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          Master Timeline
+        </button>
+        <button class="nav-tab" data-layer="2">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Monthly Roadmap
+        </button>
+        <button class="nav-tab" data-layer="3">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><rect x="3" y="3" width="18" height="18" rx="2" fill="none"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+          Weekly Dashboard
+        </button>
+        <button class="nav-tab" data-layer="4">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          Daily Execution
+        </button>
+      </nav>
+
+      <!-- Action Area -->
+      <div class="action-area">
+        <button id="theme-toggle-btn" class="btn btn-icon" title="Toggle Light/Dark Theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+        <button id="quick-add-btn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Quick Add
+        </button>
+        <button id="settings-btn" class="btn btn-icon" title="Data Settings & Backup">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body Layout -->
+    <div class="app-body">
+      
+      <!-- Left Sidebar: Category Panel -->
+      <aside class="app-sidebar">
+        <div class="sidebar-section">
+          <h3>Activity Focus Areas</h3>
+          <p class="section-desc">Click filters to toggle category visibility across timelines.</p>
+          
+          <div class="category-legend" id="category-legend-list">
+            <!-- Rendered via JS to maintain color code mappings dynamically -->
+          </div>
+        </div>
+
+        <!-- Metrics/Insights Panel -->
+        <div class="sidebar-section progress-insights">
+          <h3>Progress Metrics</h3>
+          <div class="metric-card">
+            <span class="metric-title">Milestone Success Rate</span>
+            <div class="metric-progress-wrapper">
+              <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="milestone-progress-bar" style="width: 65%;"></div>
+              </div>
+              <span class="metric-value" id="milestone-progress-pct">65%</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Tasks Done (This Week)</span>
+            <div class="metric-progress-wrapper">
+              <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="task-progress-bar" style="width: 48%;"></div>
+              </div>
+              <span class="metric-value" id="task-progress-pct">48%</span>
+            </div>
+          </div>
+          <div class="quick-stats-grid">
+            <div class="stat-box">
+              <span class="stat-num" id="stat-days-left">542</span>
+              <span class="stat-label">Days to Apps</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num" id="stat-active-projects">2</span>
+              <span class="stat-label">Core STEM Projects</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Dashboard Container -->
+      <main class="dashboard-viewport">
+        
+        <!-- LAYER 1: MASTER TIMELINE -->
+        <section id="layer-master" class="layer-view active">
+          <div class="layer-header">
+            <div>
+              <h2>Master Timeline Roadmap</h2>
+              <p>Critical path planning from Summer 2026 to regular applications deadline (January 2028).</p>
+            </div>
+            <div class="timeline-controls">
+              <button class="btn btn-secondary btn-sm" id="timeline-zoom-in">Zoom In</button>
+              <button class="btn btn-secondary btn-sm" id="timeline-zoom-out">Zoom Out</button>
+            </div>
+          </div>
+          <div class="timeline-wrapper-outer">
+            <!-- Timeline Chart Container -->
+            <div class="timeline-chart" id="timeline-chart-root">
+              <!-- Calendar month columns will draw here -->
+              <!-- Gantt tracks will draw here -->
+            </div>
+          </div>
+        </section>
+
+        <!-- LAYER 2: MONTHLY ROADMAP -->
+        <section id="layer-month" class="layer-view">
+          <div class="layer-header flex-header">
+            <div>
+              <h2 id="calendar-month-title">June 2026</h2>
+              <p>Monthly milestone checklist and daily events agenda.</p>
+            </div>
+            <div class="view-controls">
+              <button class="btn btn-secondary btn-sm" id="calendar-prev-month">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="calendar-today">Today</button>
+              <button class="btn btn-secondary btn-sm" id="calendar-next-month">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="month-split-container">
+            <!-- Monthly Calendar Grid -->
+            <div class="month-calendar-grid-wrapper">
+              <div class="calendar-days-header">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              </div>
+              <div class="calendar-days-grid" id="calendar-days-root">
+                <!-- Dynamically Rendered Days -->
+              </div>
+            </div>
+
+            <!-- Monthly Milestones Checklist -->
+            <div class="month-milestones-panel">
+              <div class="panel-header">
+                <h3>Monthly Milestones</h3>
+                <button class="btn btn-icon btn-sm" id="add-monthly-milestone-btn" title="Add Milestone">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+              </div>
+              <div class="milestones-checklist" id="monthly-milestones-list">
+                <!-- Checkboxes populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAYER 3: WEEKLY DASHBOARD -->
+        <section id="layer-week" class="layer-view">
+          <div class="layer-header flex-header">
+            <div>
+              <h2 id="weekly-dashboard-title">Week 26 (Jun 22 - Jun 28, 2026)</h2>
+              <p>Weekly priority list and key project hourly time allotments.</p>
+            </div>
+            <div class="view-controls">
+              <button class="btn btn-secondary btn-sm" id="week-prev">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="week-today">This Week</button>
+              <button class="btn btn-secondary btn-sm" id="week-next">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="week-split-container">
+            <!-- Week Calendar Grid -->
+            <div class="week-days-column-wrapper" id="week-columns-root">
+              <!-- Dynamically rendered week columns (Mon-Sun) -->
+            </div>
+
+            <!-- Weekly Priorities Sidebar -->
+            <div class="week-priorities-panel">
+              <div class="panel-header">
+                <h3>Weekly Priorities</h3>
+                <button class="btn btn-icon btn-sm" id="add-weekly-priority-btn" title="Add Weekly Priority">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+              </div>
+              <div class="priorities-checklist" id="weekly-priorities-list">
+                <!-- Priorities check list -->
+              </div>
+
+              <!-- Time allocations -->
+              <div class="panel-header" style="margin-top: 1.5rem;">
+                <h3>Time Allocation Tracker</h3>
+              </div>
+              <div class="weekly-time-tracker" id="weekly-time-tracker-root">
+                <!-- Category hour items with +/- adjustments -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LAYER 4: DAILY EXECUTION -->
+        <section id="layer-daily" class="layer-view">
+          <div class="layer-header flex-header">
+            <div>
+              <h2 id="daily-execution-title">Monday, June 22, 2026</h2>
+              <p>Hourly time-blocking and focus task execution list.</p>
+            </div>
+            <div class="view-controls">
+              <button class="btn btn-secondary btn-sm" id="day-prev">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="btn btn-secondary btn-sm" id="day-today">Today</button>
+              <button class="btn btn-secondary btn-sm" id="day-next">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="daily-split-container">
+            <!-- Time blocking (6 AM - 11 PM) -->
+            <div class="daily-timeblocking-panel">
+              <div class="panel-header">
+                <h3>Hourly Planner</h3>
+                <span class="panel-subtitle">Click slots to allocate work blocks</span>
+              </div>
+              <div class="time-slots-list" id="daily-time-slots-root">
+                <!-- 6:00 to 23:00 hourly schedule -->
+              </div>
+            </div>
+
+            <!-- Daily Tasks & Notes -->
+            <div class="daily-actions-panel">
+              <div class="panel-header">
+                <h3>Focus Tasks</h3>
+                <button class="btn btn-icon btn-sm" id="add-daily-task-btn" title="Add Focus Task">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+              </div>
+              <div class="daily-tasks-list" id="daily-tasks-root">
+                <!-- Rendered daily checklist -->
+              </div>
+
+              <!-- Daily Logs & Reflections -->
+              <div class="panel-header" style="margin-top: 1.5rem;">
+                <h3>Daily Journal & Tech Log</h3>
+              </div>
+              <div class="daily-reflection-box">
+                <textarea id="daily-reflection-input" placeholder="Document engineering project breakthroughs, drone design issues, or research breakthroughs from today..."></textarea>
+                <button class="btn btn-secondary btn-sm" id="save-reflection-btn" style="align-self: flex-end; margin-top: 0.5rem;">
+                  Save Log
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- UNIVERSAL INTERACTIVE MODAL (ADD / EDIT FORM) -->
+  <div class="modal-backdrop" id="edit-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Create New Event</h3>
+        <button class="btn-close-modal" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="event-form">
+          <input type="hidden" id="event-id">
+          
+          <div class="form-group">
+            <label for="event-title">Title</label>
+            <input type="text" id="event-title" required placeholder="e.g., Drone Frame Optimization, SAT Math Study">
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="event-category">Category</label>
+              <select id="event-category" required>
+                <!-- Rendered dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="event-type">Layer Target</label>
+              <select id="event-type" required>
+                <option value="phase">Master Timeline Phase (Long term)</option>
+                <option value="milestone">Monthly Milestone (Goal)</option>
+                <option value="priority">Weekly Priority</option>
+                <option value="task">Daily Task</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2" id="date-range-container">
+            <div class="form-group">
+              <label for="event-start-date">Start Date</label>
+              <input type="date" id="event-start-date" required>
+            </div>
+            <div class="form-group" id="end-date-group">
+              <label for="event-end-date">End Date</label>
+              <input type="date" id="event-end-date" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2" id="time-range-container" style="display: none;">
+            <div class="form-group">
+              <label for="event-start-time">Start Time</label>
+              <input type="time" id="event-start-time">
+            </div>
+            <div class="form-group">
+              <label for="event-end-time">End Time</label>
+              <input type="time" id="event-end-time">
+            </div>
+          </div>
+
+          <div class="form-group" id="priority-tier-group" style="display: none;">
+            <label for="event-priority">Priority Priority</label>
+            <select id="event-priority">
+              <option value="high">High (Do first)</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="event-desc">Description & Notes</label>
+            <textarea id="event-desc" rows="3" placeholder="Provide extra goals, details, links, or equations..."></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" id="event-delete-btn" style="margin-right: auto; display: none;">Delete</button>
+            <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="event-submit-btn">Save Activity</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (DATA IMPORT / EXPORT) -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-card card-settings" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>System Settings & Categories</h3>
+        <button class="btn-close-modal" id="settings-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="settings-intro">Configure timeline options, edit category tags, and manage local data files.</p>
+        
+        <div class="settings-option">
+          <h4>Manage Portfolio Categories</h4>
+          <p>Create, modify name/color, or delete categories. (All timeline events auto-update).</p>
+          <div id="category-manager-list" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; padding-right: 0.25rem;">
+            <!-- Rendered dynamically in app.js -->
+          </div>
+          <div class="category-add-form" style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="new-cat-name" placeholder="New Category Name..." style="flex: 1; padding: 0.4rem 0.6rem; font-size: 0.8rem;">
+            <input type="color" id="new-cat-color" value="#3b82f6" title="Pick Color" style="width: 38px; height: 32px; padding: 2px; border: 1px solid var(--panel-border); border-radius: 6px; cursor: pointer; background: transparent;">
+            <button type="button" class="btn btn-secondary btn-sm" id="new-cat-add-btn" style="height: 32px; padding: 0 0.75rem;">Add</button>
+          </div>
+        </div>
+
+        <hr class="settings-divider">
+
+        <div class="settings-option">
+          <h4>Export Data Backup</h4>
+          <p>Download a JSON file containing all customized phases, deadlines, priorities, tasks, and reflections.</p>
+          <button class="btn btn-secondary" id="export-data-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export Backup
+          </button>
+        </div>
+
+        <hr class="settings-divider">
+
+        <div class="settings-option">
+          <h4>Import Data Backup</h4>
+          <p>Restore your saved timeline files. This will merge or overwrite current data in local storage.</p>
+          <div class="file-upload-wrapper">
+            <input type="file" id="import-file-input" accept=".json">
+          </div>
+        </div>
+
+        <hr class="settings-divider">
+
+        <div class="settings-option">
+          <h4>Factory Reset</h4>
+          <p>Reset the calendar back to the original engineering portfolio curriculum roadmap.</p>
+          <button class="btn btn-danger" id="reset-data-btn">
+            Reset System
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
