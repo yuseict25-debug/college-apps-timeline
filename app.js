@@ -16,6 +16,79 @@ const DEFAULT_CATEGORIES = {
   'college-apps': { name: 'College Apps & Essays', color: '#ec4899' }
 };
 
+const DEFAULT_CATEGORY_PROFILES = {
+  academics: {
+    goal: 'Maintain a 4.0 unweighted GPA and score top marks in AP Calculus BC, AP Physics C, AP Chemistry, and AP US History.',
+    goalDeadline: '2027-01-20',
+    actionItems: [
+      { id: 'ac-1', text: 'Complete daily AP problem sets before class', completed: false },
+      { id: 'ac-2', text: 'Re-do every missed test question within 24 hours', completed: false },
+      { id: 'ac-3', text: 'Meet with teachers for feedback before each major unit test', completed: false },
+      { id: 'ac-4', text: 'Keep a running error log for Calc and Physics', completed: false }
+    ]
+  },
+  sat: {
+    goal: 'Reach 1550+ on the SAT through consistent practice, mock exams, and targeted weak-area review.',
+    goalDeadline: '2026-10-05',
+    actionItems: [
+      { id: 'sat-1', text: '45 minutes of Khan Academy SAT practice daily', completed: false },
+      { id: 'sat-2', text: 'One full timed mock exam per week with error log', completed: false },
+      { id: 'sat-3', text: 'Review Erica Meltzer grammar rules twice weekly', completed: false },
+      { id: 'sat-4', text: 'Track math vs reading/writing scores separately', completed: false }
+    ]
+  },
+  drone: {
+    goal: 'Design, build, and flight-test an autonomous drone with custom CAD frame, tuned ESCs, and waypoint navigation.',
+    goalDeadline: '2027-06-30',
+    actionItems: [
+      { id: 'dr-1', text: 'Finalize Fusion360 frame with stress simulation results', completed: false },
+      { id: 'dr-2', text: 'Order motors, ESCs, LiPo, and carbon fiber plates', completed: false },
+      { id: 'dr-3', text: 'Calibrate ESCs and verify thrust curves on the bench', completed: false },
+      { id: 'dr-4', text: 'Run GPS waypoint field tests and log flight data', completed: false }
+    ]
+  },
+  research: {
+    goal: 'Complete a Polygence research paper with literature review, experiments, and a polished manuscript.',
+    goalDeadline: '2027-04-30',
+    actionItems: [
+      { id: 'rs-1', text: 'Annotate 15 IEEE papers for the bibliography', completed: false },
+      { id: 'rs-2', text: 'Run simulation parameters and record thrust/drift data', completed: false },
+      { id: 'rs-3', text: 'Draft methodology and results tables', completed: false },
+      { id: 'rs-4', text: 'Submit revisions to academic supervisor biweekly', completed: false }
+    ]
+  },
+  robotics: {
+    goal: 'Found and lead a school robotics team with trained members ready for FRC/VEX competition season.',
+    goalDeadline: '2026-12-15',
+    actionItems: [
+      { id: 'rb-1', text: 'Secure teacher adviser and submit club charter', completed: false },
+      { id: 'rb-2', text: 'Recruit 12+ members at club fair', completed: false },
+      { id: 'rb-3', text: 'Run weekly CAD and soldering workshops', completed: false },
+      { id: 'rb-4', text: 'Document bylaws and meeting schedule', completed: false }
+    ]
+  },
+  competitions: {
+    goal: 'Advance in USACO (Bronze→Gold) and submit a competitive ISEF/regional science fair project.',
+    goalDeadline: '2026-12-10',
+    actionItems: [
+      { id: 'cp-1', text: 'Solve 3 USACO training problems per week', completed: false },
+      { id: 'cp-2', text: 'Complete ISEF abstract and safety plan', completed: false },
+      { id: 'cp-3', text: 'Register for regional science fair on time', completed: false },
+      { id: 'cp-4', text: 'Maintain a competition results spreadsheet', completed: false }
+    ]
+  },
+  'college-apps': {
+    goal: 'Submit strong applications to target universities with polished essays, complete activity lists, and early deadlines tracked.',
+    goalDeadline: '2027-11-01',
+    actionItems: [
+      { id: 'ca-1', text: 'Build spreadsheet of deadlines, avg stats, and contacts', completed: false },
+      { id: 'ca-2', text: 'Draft Common App personal statement (3 iterations)', completed: false },
+      { id: 'ca-3', text: 'Request recommendation letters 6 weeks before deadlines', completed: false },
+      { id: 'ca-4', text: 'Finalize supplemental essays per school', completed: false }
+    ]
+  }
+};
+
 // Start and End range for the Master Timeline (June 2026 to January 2028)
 const TIMELINE_START_YEAR = 2026;
 const TIMELINE_START_MONTH = 5; // 0-indexed (June)
@@ -37,7 +110,9 @@ let state = {
     sidebar: false,
     milestones: false,
     weeklyPanel: false
-  }
+  },
+  categoryProfiles: {},
+  activeCategoryPage: null
 };
 
 // --- REALISTIC DATA SEED FOR PRE-POPULATION ---
@@ -419,7 +494,8 @@ const SEED_DATA = {
   },
   dailyReflections: {
     '2026-06-22': 'Optimized the structural design for the drone frame arms. Stress analysis confirms 3mm carbon fiber plate is required to prevent vibrations during peak load trials. Polygence literature review is going smoothly; annotated 2 papers on LiDAR-based obstacle detection methods. Need to focus more on AP Calc limits tomorrow.'
-  }
+  },
+  categoryProfiles: JSON.parse(JSON.stringify(DEFAULT_CATEGORY_PROFILES))
 };
 
 // --- INITIALIZATION ---
@@ -454,7 +530,9 @@ export function applyRemoteState(remoteState) {
     filterCategory: remoteState.filterCategory ?? null,
     zoomLevel: remoteState.zoomLevel ?? state.zoomLevel,
     theme: remoteState.theme ?? state.theme,
-    panelCollapsed: remoteState.panelCollapsed ?? state.panelCollapsed
+    panelCollapsed: remoteState.panelCollapsed ?? state.panelCollapsed,
+    categoryProfiles: remoteState.categoryProfiles ?? state.categoryProfiles,
+    activeCategoryPage: remoteState.activeCategoryPage ?? null
   };
   normalizeState();
   persistLocalState();
@@ -473,6 +551,51 @@ function normalizeState() {
   if (!state.events) state.events = [];
   if (!state.weeklyHours) state.weeklyHours = {};
   if (!state.dailyReflections) state.dailyReflections = {};
+  if (!state.categoryProfiles) state.categoryProfiles = {};
+  if (state.activeCategoryPage === undefined) state.activeCategoryPage = null;
+  ensureCategoryProfiles();
+}
+
+function ensureCategoryProfiles() {
+  Object.keys(state.categories).forEach((key) => {
+    if (!state.categoryProfiles[key]) {
+      const defaults = DEFAULT_CATEGORY_PROFILES[key];
+      state.categoryProfiles[key] = defaults
+        ? JSON.parse(JSON.stringify(defaults))
+        : { goal: '', goalDeadline: '', actionItems: [] };
+    } else {
+      if (!Array.isArray(state.categoryProfiles[key].actionItems)) {
+        state.categoryProfiles[key].actionItems = [];
+      }
+      if (state.categoryProfiles[key].goal === undefined) {
+        state.categoryProfiles[key].goal = '';
+      }
+      if (state.categoryProfiles[key].goalDeadline === undefined) {
+        state.categoryProfiles[key].goalDeadline = '';
+      }
+    }
+  });
+  Object.keys(state.categoryProfiles).forEach((key) => {
+    if (!state.categories[key]) delete state.categoryProfiles[key];
+  });
+}
+
+function getCategoryProfile(catKey) {
+  ensureCategoryProfiles();
+  return state.categoryProfiles[catKey];
+}
+
+function openCategoryPage(catKey) {
+  state.activeCategoryPage = catKey;
+  state.activeLayer = 5;
+  saveState();
+  switchLayer(5);
+}
+
+function closeCategoryPage() {
+  state.activeCategoryPage = null;
+  saveState();
+  if (state.activeLayer === 5) renderCategoryFocus();
 }
 
 // Load state from local storage or set seed defaults
@@ -508,6 +631,8 @@ function resetToDefaultState() {
   state.filterCategory = null;
   state.zoomLevel = 1.0;
   state.panelCollapsed = { sidebar: false, milestones: false, weeklyPanel: false };
+  state.categoryProfiles = JSON.parse(JSON.stringify(DEFAULT_CATEGORY_PROFILES));
+  state.activeCategoryPage = null;
   saveState();
   applyTheme();
 }
@@ -556,6 +681,9 @@ function renderSidebarLegend() {
       <span class="legend-name" title="${cat.name}">${cat.name}</span>
       <div class="legend-item-actions">
         <input type="color" class="legend-color-input" value="${cat.color}" title="Change color" data-key="${key}">
+        <button type="button" class="legend-page-btn" data-key="${key}" title="Open category page">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </button>
         <button type="button" class="legend-edit-btn" data-key="${key}" title="Rename category">
           <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         </button>
@@ -586,6 +714,11 @@ function renderSidebarLegend() {
       populateCategorySelects();
     });
 
+    item.querySelector('.legend-page-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openCategoryPage(key);
+    });
+
     item.querySelector('.legend-edit-btn').addEventListener('click', (ev) => {
       ev.stopPropagation();
       const newName = prompt('Rename category:', cat.name);
@@ -614,6 +747,7 @@ function addCategory(name, color) {
   }
   const key = `cat-${Date.now()}`;
   state.categories[key] = { name, color };
+  state.categoryProfiles[key] = { goal: '', goalDeadline: '', actionItems: [] };
   saveState();
   renderSidebarLegend();
   renderActiveLayer();
@@ -707,8 +841,11 @@ function switchLayer(layerNumber) {
   if (layerNumber === 2) targetViewId = 'layer-month';
   else if (layerNumber === 3) targetViewId = 'layer-week';
   else if (layerNumber === 4) targetViewId = 'layer-daily';
+  else if (layerNumber === 5) targetViewId = 'layer-category';
   
   document.getElementById(targetViewId).classList.add('active');
+  
+  if (layerNumber !== 5) state.activeCategoryPage = null;
   
   renderActiveLayer();
 }
@@ -718,6 +855,7 @@ function renderActiveLayer() {
   else if (state.activeLayer === 2) renderMonthlyRoadmap();
   else if (state.activeLayer === 3) renderWeeklyDashboard();
   else if (state.activeLayer === 4) renderDailyExecution();
+  else if (state.activeLayer === 5) renderCategoryFocus();
   
   updateProgressMetrics();
 }
@@ -1484,6 +1622,247 @@ function renderDailyFocusTasks(dateStr) {
 
 
 // ==========================================================================
+// RENDER LAYER 5: CATEGORY FOCUS PAGES
+// ==========================================================================
+function renderCategoryFocus() {
+  const root = document.getElementById('category-focus-root');
+  if (!root) return;
+
+  if (state.activeCategoryPage && state.categories[state.activeCategoryPage]) {
+    renderCategoryDetail(state.activeCategoryPage, root);
+  } else {
+    renderCategoryHub(root);
+  }
+}
+
+function getCategoryProgress(catKey) {
+  const profile = getCategoryProfile(catKey);
+  const actions = profile.actionItems || [];
+  const actionDone = actions.filter((a) => a.completed).length;
+  const actionPct = actions.length ? Math.round((actionDone / actions.length) * 100) : 0;
+
+  const catEvents = state.events.filter((e) => e.category === catKey);
+  const eventsDone = catEvents.filter((e) => e.completed).length;
+  const eventPct = catEvents.length ? Math.round((eventsDone / catEvents.length) * 100) : 0;
+
+  return { actionPct, eventPct, actionDone, actionTotal: actions.length, eventsDone, eventTotal: catEvents.length };
+}
+
+function renderCategoryHub(root) {
+  root.innerHTML = `
+    <div class="layer-header">
+      <div>
+        <h2>Category Focus</h2>
+        <p>Dedicated pages for each portfolio area — set goals and track what you need to do.</p>
+      </div>
+    </div>
+    <div class="category-hub-grid" id="category-hub-grid"></div>
+  `;
+
+  const grid = root.querySelector('#category-hub-grid');
+
+  Object.keys(state.categories).forEach((key) => {
+    const cat = state.categories[key];
+    const profile = getCategoryProfile(key);
+    const progress = getCategoryProgress(key);
+    const goalPreview = profile.goal
+      ? (profile.goal.length > 120 ? profile.goal.slice(0, 117) + '…' : profile.goal)
+      : 'No goal set yet — click to define one.';
+
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'category-hub-card';
+    card.style.setProperty('--cat-color', cat.color);
+    card.innerHTML = `
+      <div class="category-hub-card-header">
+        <span class="category-hub-dot" style="background:${cat.color}; box-shadow: 0 0 10px ${cat.color};"></span>
+        <h3>${cat.name}</h3>
+      </div>
+      <p class="category-hub-goal">${goalPreview}</p>
+      <div class="category-hub-stats">
+        <span><strong>${progress.actionDone}/${progress.actionTotal}</strong> action items</span>
+        <span><strong>${progress.eventsDone}/${progress.eventTotal}</strong> timeline items</span>
+      </div>
+      <div class="category-hub-progress">
+        <div class="category-hub-progress-bar" style="width: ${progress.actionPct}%; background: ${cat.color};"></div>
+      </div>
+      <span class="category-hub-cta">Open category page →</span>
+    `;
+    card.addEventListener('click', () => openCategoryPage(key));
+    grid.appendChild(card);
+  });
+}
+
+function renderCategoryDetail(catKey, root) {
+  const cat = state.categories[catKey];
+  const profile = getCategoryProfile(catKey);
+  const progress = getCategoryProgress(catKey);
+  const today = new Date(state.activeDate);
+
+  const upcomingEvents = state.events
+    .filter((e) => e.category === catKey && !e.completed)
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+    .slice(0, 12);
+
+  const typeLabels = { phase: 'Phase', milestone: 'Milestone', priority: 'Priority', task: 'Task' };
+
+  root.innerHTML = `
+    <div class="category-detail-header" style="--cat-color: ${cat.color}">
+      <button type="button" class="btn btn-secondary btn-sm" id="category-back-btn">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        All Categories
+      </button>
+      <div class="category-detail-title-row">
+        <span class="category-detail-dot" style="background:${cat.color}; box-shadow: 0 0 12px ${cat.color};"></span>
+        <div>
+          <h2>${cat.name}</h2>
+          <p class="category-detail-subtitle">Goal planning & action checklist</p>
+        </div>
+      </div>
+      <div class="category-detail-metrics">
+        <div class="category-metric-pill">
+          <span class="metric-num">${progress.actionPct}%</span>
+          <span class="metric-lbl">Actions done</span>
+        </div>
+        <div class="category-metric-pill">
+          <span class="metric-num">${progress.eventPct}%</span>
+          <span class="metric-lbl">Timeline done</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-detail-grid">
+      <section class="category-panel category-goal-panel">
+        <div class="panel-header">
+          <h3>Primary Goal</h3>
+        </div>
+        <textarea id="category-goal-input" class="category-goal-textarea" rows="4" placeholder="What do you want to achieve in this category?">${profile.goal || ''}</textarea>
+        <div class="category-goal-deadline">
+          <label for="category-goal-deadline">Target deadline</label>
+          <input type="date" id="category-goal-deadline" value="${profile.goalDeadline || ''}">
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="category-goal-save">Save Goal</button>
+      </section>
+
+      <section class="category-panel category-actions-panel">
+        <div class="panel-header">
+          <h3>What You Need To Do</h3>
+          <button type="button" class="btn btn-icon btn-sm" id="category-add-action-btn" title="Add action item">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+        <p class="category-panel-desc">Concrete steps to reach your goal in ${cat.name}.</p>
+        <div class="category-actions-list" id="category-actions-list"></div>
+      </section>
+
+      <section class="category-panel category-timeline-panel">
+        <div class="panel-header">
+          <h3>Related Timeline Items</h3>
+          <button type="button" class="btn btn-secondary btn-sm" id="category-add-event-btn">+ Add Item</button>
+        </div>
+        <p class="category-panel-desc">Phases, milestones, priorities, and tasks linked to this category.</p>
+        <div class="category-timeline-list" id="category-timeline-list"></div>
+      </section>
+    </div>
+  `;
+
+  root.querySelector('#category-back-btn').addEventListener('click', closeCategoryPage);
+
+  root.querySelector('#category-goal-save').addEventListener('click', () => {
+    profile.goal = root.querySelector('#category-goal-input').value.trim();
+    profile.goalDeadline = root.querySelector('#category-goal-deadline').value;
+    saveState();
+    const btn = root.querySelector('#category-goal-save');
+    const orig = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+
+  root.querySelector('#category-add-action-btn').addEventListener('click', () => {
+    const text = prompt('What do you need to do for this goal?');
+    if (!text || !text.trim()) return;
+    profile.actionItems.push({
+      id: `action-${Date.now()}`,
+      text: text.trim(),
+      completed: false
+    });
+    saveState();
+    renderCategoryDetail(catKey, root);
+  });
+
+  root.querySelector('#category-add-event-btn').addEventListener('click', () => {
+    openAddModal(null, catKey, state.activeDate, state.activeDate);
+  });
+
+  const actionsList = root.querySelector('#category-actions-list');
+  if (!profile.actionItems.length) {
+    actionsList.innerHTML = '<p class="category-empty-msg">No action items yet. Click + to add steps toward your goal.</p>';
+  } else {
+    profile.actionItems.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'checklist-item category-action-item';
+      row.innerHTML = `
+        <div class="checklist-checkbox-wrapper">
+          <input type="checkbox" class="checklist-checkbox" ${item.completed ? 'checked' : ''}>
+        </div>
+        <div class="checklist-label-container">
+          <span class="checklist-title">${item.text}</span>
+        </div>
+        <button type="button" class="category-action-delete btn-trash" title="Remove">&times;</button>
+      `;
+      row.querySelector('.checklist-checkbox').addEventListener('change', (ev) => {
+        item.completed = ev.target.checked;
+        saveState();
+        updateProgressMetrics();
+      });
+      row.querySelector('.checklist-label-container').addEventListener('click', () => {
+        const updated = prompt('Edit action item:', item.text);
+        if (updated !== null && updated.trim()) {
+          item.text = updated.trim();
+          saveState();
+          renderCategoryDetail(catKey, root);
+        }
+      });
+      row.querySelector('.category-action-delete').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        profile.actionItems = profile.actionItems.filter((a) => a.id !== item.id);
+        saveState();
+        renderCategoryDetail(catKey, root);
+      });
+      actionsList.appendChild(row);
+    });
+  }
+
+  const timelineList = root.querySelector('#category-timeline-list');
+  if (!upcomingEvents.length) {
+    timelineList.innerHTML = '<p class="category-empty-msg">No open timeline items for this category.</p>';
+  } else {
+    upcomingEvents.forEach((e) => {
+      const endStr = e.endDate && e.endDate !== e.startDate
+        ? `${new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date(e.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+        : new Date(e.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const isOverdue = new Date(e.endDate || e.startDate) < today;
+
+      const row = document.createElement('div');
+      row.className = 'category-timeline-item';
+      row.style.borderLeftColor = cat.color;
+      row.innerHTML = `
+        <div class="category-timeline-item-top">
+          <span class="tag-badge" style="background:${cat.color}22; color:${cat.color}; border:1px solid ${cat.color}44;">${typeLabels[e.type] || e.type}</span>
+          ${isOverdue ? '<span class="tag-badge priority-high">Overdue</span>' : ''}
+        </div>
+        <h4>${e.title}</h4>
+        <p class="category-timeline-date">${endStr}</p>
+        ${e.description ? `<p class="category-timeline-desc">${e.description}</p>` : ''}
+      `;
+      row.addEventListener('click', () => openEditModal(e));
+      timelineList.appendChild(row);
+    });
+  }
+}
+
+
+// ==========================================================================
 // CATEGORY EDITOR PANEL
 // ==========================================================================
 function renderCategoryManager() {
@@ -1553,9 +1932,13 @@ function deleteCategory(key) {
     });
     
     delete state.categories[key];
+    delete state.categoryProfiles[key];
     
     if (state.filterCategory === key) {
       state.filterCategory = null;
+    }
+    if (state.activeCategoryPage === key) {
+      state.activeCategoryPage = null;
     }
     
     saveState();

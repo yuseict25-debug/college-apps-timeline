@@ -45,6 +45,10 @@
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
           Daily Execution
         </button>
+        <button class="nav-tab" data-layer="5">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          Category Focus
+        </button>
       </nav>
 
       <!-- Action Area -->
@@ -77,7 +81,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
           </div>
-          <p class="section-desc">Click to filter. Use the pencil to edit name/color, or add new categories below.</p>
+          <p class="section-desc">Click name to filter. Use the ↗ icon to open a category goal page.</p>
           
           <div class="category-legend" id="category-legend-list">
             <!-- Rendered via JS to maintain color code mappings dynamically -->
@@ -314,6 +318,13 @@
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- LAYER 5: CATEGORY FOCUS -->
+        <section id="layer-category" class="layer-view">
+          <div class="category-focus-root" id="category-focus-root">
+            <!-- Hub grid or category detail rendered by JS -->
           </div>
         </section>
 

@@ -9,7 +9,8 @@
     "setup": "bash scripts/setup-cloud.sh",
     "setup:resume": "bash scripts/setup-resume.sh",
     "deploy:rules": "firebase deploy --only firestore:rules",
-    "deploy:vercel": "vercel deploy --prod --yes"
+    "deploy:vercel": "vercel deploy --prod --yes",
+    "deploy:vercel:env": "node scripts/push-vercel-env.js"
   },
   "devDependencies": {
     "firebase-tools": "^13.35.1",
