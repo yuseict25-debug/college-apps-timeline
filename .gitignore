@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+.vercel
+.env*
+firebase-config.js
+.vercel-env-tmp

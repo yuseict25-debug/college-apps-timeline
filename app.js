@@ -3,6 +3,8 @@
    State Management, UI Renderers, local persistence, and Seed Data
    ========================================================================== */
 
+import { scheduleCloudSave } from './cloud-sync.js';
+
 // --- DEFAULT CATEGORIES CONFIGURATION ---
 const DEFAULT_CATEGORIES = {
   academics: { name: 'Academics', color: '#6366f1' },
@@ -30,7 +32,12 @@ let state = {
   filterCategory: null,  // Selected category filter (null means all active)
   zoomLevel: 1.0,        // Timeline zoom level modifier
   theme: 'dark',         // 'dark' or 'light'
-  categories: {}         // Dynamically customized categories map
+  categories: {},         // Dynamically customized categories map
+  panelCollapsed: {
+    sidebar: false,
+    milestones: false,
+    weeklyPanel: false
+  }
 };
 
 // --- REALISTIC DATA SEED FOR PRE-POPULATION ---
@@ -416,13 +423,56 @@ const SEED_DATA = {
 };
 
 // --- INITIALIZATION ---
-function init() {
+export function init() {
   loadState();
+  applyPanelCollapseState();
   renderSidebarLegend();
   updateProgressMetrics();
   switchLayer(state.activeLayer);
   setupEventListeners();
   populateCategorySelects();
+}
+
+export function refreshUI() {
+  applyPanelCollapseState();
+  applyTheme();
+  renderSidebarLegend();
+  updateProgressMetrics();
+  switchLayer(state.activeLayer);
+  populateCategorySelects();
+}
+
+export function applyRemoteState(remoteState) {
+  state = {
+    ...state,
+    events: remoteState.events ?? state.events,
+    weeklyHours: remoteState.weeklyHours ?? state.weeklyHours,
+    dailyReflections: remoteState.dailyReflections ?? state.dailyReflections,
+    categories: remoteState.categories ?? state.categories,
+    activeLayer: remoteState.activeLayer ?? state.activeLayer,
+    activeDate: remoteState.activeDate ?? state.activeDate,
+    filterCategory: remoteState.filterCategory ?? null,
+    zoomLevel: remoteState.zoomLevel ?? state.zoomLevel,
+    theme: remoteState.theme ?? state.theme,
+    panelCollapsed: remoteState.panelCollapsed ?? state.panelCollapsed
+  };
+  normalizeState();
+  persistLocalState();
+}
+
+function normalizeState() {
+  if (!state.activeDate) state.activeDate = '2026-06-22';
+  if (!state.zoomLevel) state.zoomLevel = 1.0;
+  if (!state.theme) state.theme = 'dark';
+  if (!state.categories || Object.keys(state.categories).length === 0) {
+    state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+  if (!state.panelCollapsed) {
+    state.panelCollapsed = { sidebar: false, milestones: false, weeklyPanel: false };
+  }
+  if (!state.events) state.events = [];
+  if (!state.weeklyHours) state.weeklyHours = {};
+  if (!state.dailyReflections) state.dailyReflections = {};
 }
 
 // Load state from local storage or set seed defaults
@@ -431,12 +481,7 @@ function loadState() {
   if (saved) {
     try {
       state = JSON.parse(saved);
-      if (!state.activeDate) state.activeDate = '2026-06-22';
-      if (!state.zoomLevel) state.zoomLevel = 1.0;
-      if (!state.theme) state.theme = 'dark';
-      if (!state.categories || Object.keys(state.categories).length === 0) {
-        state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      }
+      normalizeState();
     } catch (e) {
       console.error('Failed to parse saved state, resetting to defaults.', e);
       resetToDefaultState();
@@ -445,6 +490,11 @@ function loadState() {
     resetToDefaultState();
   }
   applyTheme();
+}
+
+function persistLocalState() {
+  const payload = { ...state, updatedAt: Date.now() };
+  localStorage.setItem('apex_timeline_state', JSON.stringify(payload));
 }
 
 function resetToDefaultState() {
@@ -457,12 +507,14 @@ function resetToDefaultState() {
   state.activeDate = '2026-06-22';
   state.filterCategory = null;
   state.zoomLevel = 1.0;
+  state.panelCollapsed = { sidebar: false, milestones: false, weeklyPanel: false };
   saveState();
   applyTheme();
 }
 
 function saveState() {
-  localStorage.setItem('apex_timeline_state', JSON.stringify(state));
+  persistLocalState();
+  scheduleCloudSave({ ...state, updatedAt: Date.now() });
 }
 
 // Theme application utility
@@ -502,21 +554,95 @@ function renderSidebarLegend() {
     item.innerHTML = `
       <span class="legend-color" style="background-color: ${cat.color}; color: ${cat.color}; box-shadow: 0 0 8px ${cat.color};"></span>
       <span class="legend-name" title="${cat.name}">${cat.name}</span>
+      <div class="legend-item-actions">
+        <input type="color" class="legend-color-input" value="${cat.color}" title="Change color" data-key="${key}">
+        <button type="button" class="legend-edit-btn" data-key="${key}" title="Rename category">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </button>
+        <button type="button" class="legend-delete-btn" data-key="${key}" title="Delete category">
+          <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+      </div>
     `;
     
-    item.addEventListener('click', () => {
+    item.querySelector('.legend-name').addEventListener('click', () => {
       if (state.filterCategory === key) {
-        state.filterCategory = null; // Toggle off filter
+        state.filterCategory = null;
       } else {
-        state.filterCategory = key;  // Set filter
+        state.filterCategory = key;
       }
       saveState();
       renderSidebarLegend();
       renderActiveLayer();
     });
+
+    item.querySelector('.legend-color-input').addEventListener('click', (ev) => ev.stopPropagation());
+    item.querySelector('.legend-color-input').addEventListener('change', (ev) => {
+      ev.stopPropagation();
+      state.categories[key].color = ev.target.value;
+      saveState();
+      renderSidebarLegend();
+      renderActiveLayer();
+      populateCategorySelects();
+    });
+
+    item.querySelector('.legend-edit-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const newName = prompt('Rename category:', cat.name);
+      if (newName && newName.trim()) {
+        state.categories[key].name = newName.trim();
+        saveState();
+        renderSidebarLegend();
+        renderActiveLayer();
+        populateCategorySelects();
+      }
+    });
+
+    item.querySelector('.legend-delete-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      deleteCategory(key);
+    });
     
     container.appendChild(item);
   });
+}
+
+function addCategory(name, color) {
+  if (!name) {
+    alert('Please enter a name for the new category.');
+    return false;
+  }
+  const key = `cat-${Date.now()}`;
+  state.categories[key] = { name, color };
+  saveState();
+  renderSidebarLegend();
+  renderActiveLayer();
+  populateCategorySelects();
+  if (document.getElementById('settings-modal').classList.contains('active')) {
+    renderCategoryManager();
+  }
+  return true;
+}
+
+function applyPanelCollapseState() {
+  const { sidebar, milestones, weeklyPanel } = state.panelCollapsed;
+
+  document.getElementById('app-sidebar').classList.toggle('collapsed', sidebar);
+  document.getElementById('sidebar-expand-btn').classList.toggle('visible', sidebar);
+
+  document.getElementById('month-split-container').classList.toggle('milestones-collapsed', milestones);
+  document.getElementById('month-milestones-panel').classList.toggle('collapsed', milestones);
+  document.getElementById('milestones-expand-btn').classList.toggle('visible', milestones);
+
+  document.getElementById('week-split-container').classList.toggle('weekly-collapsed', weeklyPanel);
+  document.getElementById('week-priorities-panel').classList.toggle('collapsed', weeklyPanel);
+  document.getElementById('weekly-panel-expand-btn').classList.toggle('visible', weeklyPanel);
+}
+
+function togglePanelCollapse(panelKey) {
+  state.panelCollapsed[panelKey] = !state.panelCollapsed[panelKey];
+  saveState();
+  applyPanelCollapseState();
 }
 
 // --- UPDATE PROGRESS WIDGETS ---
@@ -912,14 +1038,14 @@ function createDayCell(container, dayNumber, dateObj, isOtherMonth, isToday = fa
     return dateObj >= start && dateObj <= end;
   });
 
-  dayEvents.slice(0, 3).forEach(e => {
+  dayEvents.slice(0, 5).forEach(e => {
     const cat = state.categories[e.category] || { name: 'Unknown', color: '#3b82f6' };
     const dot = document.createElement('div');
     dot.className = 'day-event-dot-item';
     dot.style.backgroundColor = cat.color;
     dot.style.color = getContrastColor(cat.color);
-    dot.textContent = e.title;
-    dot.title = `${cat.name}: ${e.title}`;
+    dot.innerHTML = `<span class="day-event-cat">${cat.name}</span><span class="day-event-title">${e.title}</span>`;
+    dot.title = `${cat.name}: ${e.title}${e.description ? '\n' + e.description : ''}`;
     dot.addEventListener('click', (ev) => {
       ev.stopPropagation();
       openEditModal(e);
@@ -927,13 +1053,13 @@ function createDayCell(container, dayNumber, dateObj, isOtherMonth, isToday = fa
     list.appendChild(dot);
   });
 
-  if (dayEvents.length > 3) {
+  if (dayEvents.length > 5) {
     const more = document.createElement('div');
     more.className = 'day-event-dot-item';
     more.style.background = 'rgba(255, 255, 255, 0.1)';
     more.style.color = 'var(--text-primary)';
     more.style.textAlign = 'center';
-    more.textContent = `+${dayEvents.length - 3} more`;
+    more.textContent = `+${dayEvents.length - 5} more`;
     list.appendChild(more);
   }
 
@@ -1097,7 +1223,9 @@ function renderWeeklyDashboard() {
 
         card.innerHTML = `
           <h5>${e.title}</h5>
-          <span>${metaTime}</span>
+          <span class="column-event-meta">${metaTime}</span>
+          <span class="column-event-cat" style="color: ${cat.color};">${(state.categories[e.category] || {}).name || 'Event'}</span>
+          ${e.description ? `<p class="column-event-desc">${e.description}</p>` : ''}
         `;
 
         card.addEventListener('click', (ev) => {
@@ -1414,8 +1542,9 @@ function deleteCategory(key) {
     return;
   }
   
-  if (confirm(`Are you sure you want to delete the category "${state.categories[key].name}"? All timeline events currently mapped here will be reassigned to Academics/Calculus.`)) {
-    const fallbackKey = keys.find(k => k !== key);
+  const fallbackKey = keys.find(k => k !== key);
+  
+  if (confirm(`Are you sure you want to delete the category "${state.categories[key].name}"? Events in this category will be reassigned to "${state.categories[fallbackKey].name}".`)) {
     
     state.events.forEach(e => {
       if (e.category === key) {
@@ -1449,30 +1578,31 @@ function setupEventListeners() {
     applyTheme();
   });
 
-  // Category Add inline form
+  // Category Add inline form (settings modal)
   document.getElementById('new-cat-add-btn').addEventListener('click', () => {
     const nameInput = document.getElementById('new-cat-name');
     const colorInput = document.getElementById('new-cat-color');
-    const name = nameInput.value.trim();
-    const color = colorInput.value;
-    
-    if (!name) {
-      alert('Failed: Please enter a name for the new category.');
-      return;
+    if (addCategory(nameInput.value.trim(), colorInput.value)) {
+      nameInput.value = '';
     }
-    
-    // Check if key conflicts
-    const key = `cat-${Date.now()}`;
-    state.categories[key] = { name, color };
-    
-    saveState();
-    nameInput.value = '';
-    
-    renderCategoryManager();
-    renderSidebarLegend();
-    renderActiveLayer();
-    populateCategorySelects();
   });
+
+  // Category Add from sidebar
+  document.getElementById('sidebar-new-cat-add-btn').addEventListener('click', () => {
+    const nameInput = document.getElementById('sidebar-new-cat-name');
+    const colorInput = document.getElementById('sidebar-new-cat-color');
+    if (addCategory(nameInput.value.trim(), colorInput.value)) {
+      nameInput.value = '';
+    }
+  });
+
+  // Panel collapse toggles
+  document.getElementById('sidebar-collapse-btn').addEventListener('click', () => togglePanelCollapse('sidebar'));
+  document.getElementById('sidebar-expand-btn').addEventListener('click', () => togglePanelCollapse('sidebar'));
+  document.getElementById('milestones-collapse-btn').addEventListener('click', () => togglePanelCollapse('milestones'));
+  document.getElementById('milestones-expand-btn').addEventListener('click', () => togglePanelCollapse('milestones'));
+  document.getElementById('weekly-panel-collapse-btn').addEventListener('click', () => togglePanelCollapse('weeklyPanel'));
+  document.getElementById('weekly-panel-expand-btn').addEventListener('click', () => togglePanelCollapse('weeklyPanel'));
 
   // Navigation tabs
   document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -1606,7 +1736,7 @@ function setupEventListeners() {
   document.getElementById('reset-data-btn').addEventListener('click', () => {
     if (confirm('Are you sure you want to reset all customized timelines back to factory defaults? Your changes will be deleted.')) {
       resetToDefaultState();
-      init();
+      refreshUI();
       document.getElementById('settings-modal').classList.remove('active');
     }
   });
@@ -1842,8 +1972,11 @@ function importDataBackup(ev) {
           ...state,
           ...parsedData
         };
+        if (!state.panelCollapsed) {
+          state.panelCollapsed = { sidebar: false, milestones: false, weeklyPanel: false };
+        }
         saveState();
-        init();
+        refreshUI();
         alert('Data restore backup loaded successfully!');
         document.getElementById('settings-modal').classList.remove('active');
       } else {
@@ -1856,6 +1989,3 @@ function importDataBackup(ev) {
   fileReader.readAsText(file);
 }
 
-
-// --- START APPLICATION ---
-window.addEventListener('DOMContentLoaded', init);
